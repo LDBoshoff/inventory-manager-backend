@@ -1,11 +1,14 @@
-package main;
+package main.java.com.ldb.service;
 import java.sql.*;
+
+import main.java.com.ldb.utils.DatabaseConnection;
 
 public class UserManager {
     private static UserManager instance = null;
+    private Connection connection;
 
     private UserManager() {
-        // Private constructor to prevent external instantiation
+        connection = DatabaseConnection.getConnection();
     }
 
     public static UserManager getInstance() {
@@ -41,7 +44,7 @@ public class UserManager {
         return isValid;
     }
 
-    public boolean uniqueEmail(Connection connection, String email) {
+    public boolean uniqueEmail(String email) {
         boolean unique = false;
 
         String query = "SELECT COUNT(*) FROM users WHERE email = ?";
@@ -49,6 +52,7 @@ public class UserManager {
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, email);
             ResultSet resultSet = preparedStatement.executeQuery();
+            
             if (resultSet.next()) {
                 int count = resultSet.getInt(1); // Get the count from the query result
                 unique = (count == 0); // Set isValid to true if count is greater than 0
@@ -60,19 +64,18 @@ public class UserManager {
         return unique;
     }
 
-    public boolean addUser(Connection connection, String firstName, String lastName, String email, String password) {
-        String query = "INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)";
+    public boolean addUser(String email, String password, String firstName, String lastName)  {
+        String query = "INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)";
     
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setString(1, firstName);
-            preparedStatement.setString(2, lastName);
-            preparedStatement.setString(3, email);
-            preparedStatement.setString(4, password);
+            preparedStatement.setString(1, email);
+            preparedStatement.setString(2, password);
+            preparedStatement.setString(3, firstName);
+            preparedStatement.setString(4, lastName);
             
             int rowsInserted = preparedStatement.executeUpdate();
-            // Check if the insertion was successful (1 row should be inserted)
-            System.out.println("num rows inserted = " + rowsInserted + "rowsInsertedrowsInserted == 1 " + (rowsInserted == 1));
-            return rowsInserted == 1;
+            
+            return rowsInserted == 1; // Check if the insertion was successful (1 row should be inserted)
         } catch (SQLException e) {
             e.printStackTrace(); // Handle the error or log it.
             return false;

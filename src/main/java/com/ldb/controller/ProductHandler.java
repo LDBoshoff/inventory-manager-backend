@@ -1,6 +1,9 @@
-package main;
+package main.java.com.ldb.controller;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
+import main.java.com.ldb.service.ProductManager;
+
 import org.json.JSONObject;
 import org.json.JSONTokener;
 

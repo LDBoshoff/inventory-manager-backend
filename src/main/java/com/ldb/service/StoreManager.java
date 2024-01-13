@@ -1,4 +1,4 @@
-package main;
+package main.java.com.ldb.service;
 import java.sql.*;
 
 import java.util.ArrayList;
@@ -6,6 +6,9 @@ import java.util.List;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+
+import main.java.com.ldb.model.Store;
+import main.java.com.ldb.utils.JwtUtil;
 
 public class StoreManager {
     public StoreManager() {

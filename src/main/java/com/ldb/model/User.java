@@ -1,4 +1,4 @@
-package main;
+package main.java.com.ldb.model;
 public class User {
     private int id;
     private String firstName;
@@ -6,7 +6,6 @@ public class User {
     private String email;
     private String password;
 
-    // Constructor
     public User(int id, String firstName, String lastName, String email, String password) {
         this.id = id;
         this.firstName = firstName;
@@ -15,13 +14,8 @@ public class User {
         this.password = password;
     }
 
-    // Getters and setters (You can generate these methods in your IDE)
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getFirstName() {

@@ -1,4 +1,4 @@
-package main;
+package main.java.com.ldb.model;
 public class Store {
     private int storeId;
     private int userId;

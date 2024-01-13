@@ -1,7 +1,12 @@
-package main;
+package main.java.com.ldb.controller;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
+import main.java.com.ldb.model.Product;
+import main.java.com.ldb.model.Store;
+import main.java.com.ldb.service.ProductManager;
+import main.java.com.ldb.service.StoreManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

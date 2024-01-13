@@ -1,8 +1,10 @@
-package main;
+package main.java.com.ldb.service;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import main.java.com.ldb.model.Product;
 
 public class ProductManager {
 
