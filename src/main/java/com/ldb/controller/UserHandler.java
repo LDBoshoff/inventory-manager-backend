@@ -6,9 +6,7 @@ import com.sun.net.httpserver.HttpHandler;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import main.java.com.ldb.model.User;
 import main.java.com.ldb.service.UserManager;
-import main.java.com.ldb.utils.DatabaseConnection;
-import main.java.com.ldb.utils.JwtUtil;
-import main.java.com.ldb.utils.Response;
+import main.java.com.ldb.utils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -55,39 +53,27 @@ public class UserHandler implements HttpHandler {
     private void handleRegistration(HttpExchange exchange) throws IOException {
         InputStream requestBody = exchange.getRequestBody();
         
-        if (emptyRequest(requestBody)) {
+        if (Request.emptyRequest(requestBody)) {
             Response.sendResponse(exchange, 400, "Bad Request - Empty Request");
             return;
         }
         
         // Parse the JSON object
-        JSONObject jsonObject = parseJsonRequest(exchange);
+        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
 
         if (jsonObject == null) {
             Response.sendResponse(exchange, 500, "JSON EXCEPTION");
             return;
         }
-
-        // get values from json object - returns empty string for missing key or empty value
-        // String firstName = jsonObject.optString("firstName");
-        // String lastName = jsonObject.optString("lastName");
-        // String email = jsonObject.optString("email");
-        // String password = jsonObject.optString("password");
-
-        // // Validate data
-        // if (isNullOrEmpty(firstName) || isNullOrEmpty(lastName) || isNullOrEmpty(email) || isNullOrEmpty(password)) {
-        //     Response.sendResponse(exchange, 400, "Bad Request - Missing or empty required data in JSON request");
-        //     return;
-        // } 
         
         String[] requiredFields = {"firstName", "lastName", "email", "password"};       
         
-        Map<String, String> fieldValues = new HashMap<>(); // Define a map to store field names and their corresponding values
+        Map<String, String> fieldValues = new HashMap<>(); // Map to store field names and their corresponding values
  
-        for (String field : requiredFields) { // Check for missing or empty required fields and store their values in the map
-            String value = jsonObject.optString(field);
+        for (String field : requiredFields) {           // Check for missing or empty required fields and store their values in the map
+            String value = jsonObject.optString(field); // get values from json object - returns empty string for missing key or empty value
             
-            if (isNullOrEmpty(value)) {
+            if (Request.isNullOrEmpty(value)) {
                 Response.sendResponse(exchange, 400, "Bad Request - Missing or empty required data in JSON request");
                 return;
             }
@@ -100,6 +86,8 @@ public class UserHandler implements HttpHandler {
         String lastName = fieldValues.get("lastName");
         String email = fieldValues.get("email");
         String password = fieldValues.get("password");
+
+        System.out.println("firstName: " + firstName + "lastName: " + lastName + "email: " + email + "password: " + password);
 
         // Check for unique email
         if (!userManager.uniqueEmail(email)) {
@@ -115,24 +103,24 @@ public class UserHandler implements HttpHandler {
         }        
     }
 
-    // Helper method to check if a string is null or empty
-    private boolean isNullOrEmpty(String str) {
-        return str == null || str.trim().isEmpty();
-    }
+    // // Helper method to check if a string is null or empty
+    // private boolean isNullOrEmpty(String str) {
+    //     return str == null || str.trim().isEmpty();
+    // }
 
-    // Helper method to check if the request body is empty
-    private boolean emptyRequest(InputStream inputStream) {
-        // return inputStream == null || inputStream.available() <= 2;
-        return inputStream == null;
-    }
+    // // Helper method to check if the request body is empty
+    // private boolean emptyRequest(InputStream inputStream) {
+    //     // return inputStream == null || inputStream.available() <= 2;
+    //     return inputStream == null;
+    // }
 
-    // Helper method to parse the JSON request
-    private JSONObject parseJsonRequest(HttpExchange exchange) throws IOException {
-        try {
-            return new JSONObject(new JSONTokener(exchange.getRequestBody()));
-        } catch (JSONException e) {
-            return null;
-        }
-    }
+    // // Helper method to parse the JSON request
+    // private JSONObject parseJsonRequest(HttpExchange exchange) throws IOException {
+    //     try {
+    //         return new JSONObject(new JSONTokener(exchange.getRequestBody()));
+    //     } catch (JSONException e) {
+    //         return null;
+    //     }
+    // }
   
 }
