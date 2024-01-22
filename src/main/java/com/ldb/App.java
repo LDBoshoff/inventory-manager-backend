@@ -2,8 +2,6 @@ package main.java.com.ldb;
 
 import com.sun.net.httpserver.HttpServer;
 
-import main.java.com.ldb.controller.ProductHandler;
-import main.java.com.ldb.controller.StoreHandler;
 import main.java.com.ldb.controller.UserHandler;
 
 import java.net.InetSocketAddress;

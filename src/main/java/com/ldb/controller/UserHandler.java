@@ -1,26 +1,18 @@
 package main.java.com.ldb.controller;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
-import main.java.com.ldb.model.User;
 import main.java.com.ldb.service.UserManager;
 import main.java.com.ldb.utils.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 
 public class UserHandler implements HttpHandler {
 

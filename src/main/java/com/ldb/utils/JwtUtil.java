@@ -37,11 +37,21 @@ public class JwtUtil {
     public static String extractEmailFromToken(String token) {
         try {
             DecodedJWT decodedJWT = JWT.decode(token);
-            
             return decodedJWT.getClaim("email").asString();
         } catch (Exception e) {
-            // Handle token decoding or claim extraction errors
-            throw new RuntimeException("Failed to extract email from token");
+            throw new RuntimeException("Failed to extract email from token"); // Handle token decoding or claim extraction errors
+        }
+    }
+
+    public static boolean isTokenExpired(String token) {
+        try {
+            DecodedJWT decodedJWT = JWT.decode(token);
+            Date current = new Date();
+            Date expire = decodedJWT.getExpiresAt();
+
+            return current.after(expire);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract email from token"); // Handle token decoding or claim extraction errors
         }
     }
 }
