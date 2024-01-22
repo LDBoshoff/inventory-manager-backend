@@ -1,6 +1,5 @@
 package main.java.com.ldb.utils;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
@@ -9,9 +8,9 @@ public class JwtUtil {
 
     public static String createToken(String email) {
         Algorithm algorithm = Algorithm.HMAC256(SECRET);
-        JWTCreator.Builder builder = JWT.create()
-            .withClaim("email", email); // Add additional claims as needed
-        String token = builder.sign(algorithm);
+        String token = JWT.create()
+            .withClaim("email", email) // Add additional claims as needed
+            .sign(algorithm);
         
         return token;
     }

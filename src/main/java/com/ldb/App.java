@@ -14,8 +14,7 @@ public class App {
         int port = 8080;                                                       // Define the port for the server
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0); // Create an HTTP server
         
-        server.createContext("/api/users", new UserHandler());
-        // server.createContext("/api/register", new UserHandler());  // API endpoint for register account POST request
+        server.createContext("/api/users", new UserHandler()); // API endpoint for account register and login
         // server.createContext("/api/stores", new StoreHandler());   // API endpoint for GET all stores belonging to specific user
         // server.createContext("/api/products", new ProductHandler());
         // server.createContext("/api/products/delete", new ProductHandler());

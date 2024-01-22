@@ -22,7 +22,7 @@ public class UserManager {
         return instance;
     }
 
-    public boolean validDetails(Connection connection, String email, String password) {  
+    public boolean validDetails(String email, String password) {  
         boolean isValid = false;
 
         String query = "SELECT COUNT(*) FROM users WHERE email = ? AND password = ?"; // Execute a SQL query to check if the email and password combination exists
@@ -55,9 +55,10 @@ public class UserManager {
             
             if (resultSet.next()) {
                 int count = resultSet.getInt(1); // Get the count from the query result
-                unique = (count == 0); // Set isValid to true if count is greater than 0
+                unique = (count == 0); // If the count is zero the email is unique
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         } 
 
@@ -75,9 +76,9 @@ public class UserManager {
             
             int rowsInserted = preparedStatement.executeUpdate();
             
-            return rowsInserted == 1; // Check if the insertion was successful (1 row should be inserted)
+            return rowsInserted == 1; // Check if the insertion was successful
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle the error or log it.
+            e.printStackTrace(); 
             return false;
         }
     }

@@ -42,8 +42,7 @@ public class UserHandler implements HttpHandler {
             if (path.equals("/api/users/register")) {
                 handleRegistration(exchange);
             } else if (path.equals("/api/users/login")) {
-                // handleLogin(exchange);
-                Response.sendResponse(exchange, 200, "Logged in");
+                handleLogin(exchange);
             } else {
                 Response.sendResponse(exchange, 405, "Path does not exist.");
             }
@@ -81,13 +80,11 @@ public class UserHandler implements HttpHandler {
             fieldValues.put(field, value); // Store the field name and its value in the map
         }
 
-        // Later in your code, you can access the stored values by their field names:
+        // Store values in request
         String firstName = fieldValues.get("firstName");
         String lastName = fieldValues.get("lastName");
         String email = fieldValues.get("email");
         String password = fieldValues.get("password");
-
-        System.out.println("firstName: " + firstName + "lastName: " + lastName + "email: " + email + "password: " + password);
 
         // Check for unique email
         if (!userManager.uniqueEmail(email)) {
@@ -103,24 +100,50 @@ public class UserHandler implements HttpHandler {
         }        
     }
 
-    // // Helper method to check if a string is null or empty
-    // private boolean isNullOrEmpty(String str) {
-    //     return str == null || str.trim().isEmpty();
-    // }
+    private void handleLogin(HttpExchange exchange) throws IOException {
+        InputStream requestBody = exchange.getRequestBody();
 
-    // // Helper method to check if the request body is empty
-    // private boolean emptyRequest(InputStream inputStream) {
-    //     // return inputStream == null || inputStream.available() <= 2;
-    //     return inputStream == null;
-    // }
+        if (Request.emptyRequest(requestBody)) {
+            Response.sendResponse(exchange, 400, "Bad Request - Empty Request");
+            return;
+        }
+        
+        // Parse the JSON object
+        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
 
-    // // Helper method to parse the JSON request
-    // private JSONObject parseJsonRequest(HttpExchange exchange) throws IOException {
-    //     try {
-    //         return new JSONObject(new JSONTokener(exchange.getRequestBody()));
-    //     } catch (JSONException e) {
-    //         return null;
-    //     }
-    // }
+        if (jsonObject == null) {
+            Response.sendResponse(exchange, 500, "JSON EXCEPTION");
+            return;
+        }
+
+        String[] requiredFields = {"email", "password"};       
+        
+        Map<String, String> fieldValues = new HashMap<>(); // Map to store field names and their corresponding values
+ 
+        for (String field : requiredFields) {           // Check for missing or empty required fields and store their values in the map
+            String value = jsonObject.optString(field); // get values from json object - returns empty string for missing key or empty value
+            
+            if (Request.isNullOrEmpty(value)) {
+                Response.sendResponse(exchange, 400, "Bad Request - Missing or empty required data in JSON request");
+                return;
+            }
+            
+            fieldValues.put(field, value); // Store the field name and its value in the map
+        }
+
+        // Store values in request
+        String email = fieldValues.get("email");
+        String password = fieldValues.get("password");
+
+        // Confirms email & password combo
+        if (userManager.validDetails(email, password)) {
+            String token = JwtUtil.createToken(email);                                  // Generate a JWT with email
+            exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
+            Response.sendResponse(exchange, 200, "Logged in");
+        } else {
+            Response.sendResponse(exchange, 409, "Incorrect Details"); // Check that status code is correct
+        }
+       
+    }
   
 }
