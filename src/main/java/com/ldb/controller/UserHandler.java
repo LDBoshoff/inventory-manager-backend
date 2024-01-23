@@ -26,9 +26,10 @@ public class UserHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String requestMethod = exchange.getRequestMethod(); // gets request type
 
-        if (!requestMethod.equals("POST")) { // only POST request are allowed for this endpoint which registers and logs users in
-            Response.sendResponse(exchange, 405, "Method not allowed for this endpoint. Please use HTTP POST method.");
-        } else {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {  
+            Response.handlePreflight(exchange);  // Handle preflight request
+
+        } else if (requestMethod.equals("POST")) {
             String path = exchange.getRequestURI().getPath();
 
             if (path.equals("/api/users/register")) {
@@ -38,7 +39,10 @@ public class UserHandler implements HttpHandler {
             } else {
                 Response.sendResponse(exchange, 405, "Path does not exist.");
             }
+        } else {
+            Response.sendResponse(exchange, 405, "Method not allowed for this endpoint. Please use HTTP POST method.");
         }
+
     }
 
     private void handleRegistration(HttpExchange exchange) throws IOException {
@@ -127,13 +131,15 @@ public class UserHandler implements HttpHandler {
         String email = fieldValues.get("email");
         String password = fieldValues.get("password");
 
+        System.out.println("Email: " + email + ", password: " + password);
+
         // Confirms email & password combo
         if (userManager.validDetails(email, password)) {
             String token = JwtUtil.createToken(email);                                  // Generate a JWT with email
             exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
             Response.sendResponse(exchange, 200, "Logged in");
         } else {
-            Response.sendResponse(exchange, 409, "Incorrect Details"); // Check that status code is correct
+            Response.sendResponse(exchange, 401, "Incorrect Details"); // Check that status code is correct
         }
        
     }
