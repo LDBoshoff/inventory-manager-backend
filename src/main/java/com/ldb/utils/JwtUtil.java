@@ -39,7 +39,7 @@ public class JwtUtil {
             DecodedJWT decodedJWT = JWT.decode(token);
             return decodedJWT.getClaim("email").asString();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract email from token"); // Handle token decoding or claim extraction errors
+            return null;
         }
     }
 
@@ -51,7 +51,7 @@ public class JwtUtil {
 
             return current.after(expire);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract email from token"); // Handle token decoding or claim extraction errors
+            return false; // assume token is expired for any exception
         }
     }
 }
