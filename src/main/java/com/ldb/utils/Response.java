@@ -3,13 +3,19 @@ package main.java.com.ldb.utils;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.json.JSONObject;
+
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
 public class Response {
     
     public static void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        // JSONObject json = new JSONObject(response);
+        // response = json.toString();
+
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // test if redundant
+        exchange.getResponseHeaders().set("Access-Control-Expose-Headers", "Authorization");
         exchange.sendResponseHeaders(statusCode, response.length());
         OutputStream os = exchange.getResponseBody();
         os.write(response.getBytes());
@@ -24,10 +30,7 @@ public class Response {
         headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Include other allowed headers
         headers.add("Access-Control-Max-Age", "86400"); // 24 hours cache
     
-        // Respond with a successful status code for OPTIONS requests
         exchange.sendResponseHeaders(200, -1);
-    
-        // Close the exchange
         exchange.close();
     }
 }
