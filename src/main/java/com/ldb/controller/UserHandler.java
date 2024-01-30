@@ -3,6 +3,7 @@ package main.java.com.ldb.controller;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import main.java.com.ldb.service.StoreManager;
 import main.java.com.ldb.service.UserManager;
 import main.java.com.ldb.utils.*;
 
@@ -17,9 +18,11 @@ import org.json.JSONObject;
 public class UserHandler implements HttpHandler {
 
     private final UserManager userManager;
+    private final StoreManager storeManager;
 
     public UserHandler() {
         this.userManager = UserManager.getInstance(); // Create the UserManager instance if it doesn't exist
+        this.storeManager = StoreManager.getInstance();
     }
 
     @Override
@@ -90,7 +93,18 @@ public class UserHandler implements HttpHandler {
 
         // Attempt to add the user to the database
         if (userManager.addUser(email, password, firstName, lastName)) {
-            Response.sendResponse(exchange, 200, "User registered successfully");
+            Integer userId = userManager.getUserIdByEmail(email);
+
+            if (userId != null) {
+                String storeName = firstName + "'s Store";
+                storeManager.createStore(userId, storeName);
+                
+                Response.sendResponse(exchange, 200, "User registered successfully");
+            } else {
+                Response.sendResponse(exchange, 500, "Failed to register user.");
+            }
+
+           
         } else {
             Response.sendResponse(exchange, 500, "Failed to register user.");
         }        
@@ -130,8 +144,6 @@ public class UserHandler implements HttpHandler {
         // Store values in request
         String email = fieldValues.get("email");
         String password = fieldValues.get("password");
-
-        System.out.println("Email: " + email + ", password: " + password);
 
         // Confirms email & password combo
         if (userManager.validDetails(email, password)) {

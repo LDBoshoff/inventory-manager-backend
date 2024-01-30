@@ -1,26 +1,15 @@
 package main.java.com.ldb.model;
+
 public class Store {
-    private int storeId;
-    private int userId;
-    private String storeName;
+    private int userId; 
+    private String name; 
 
-    // Constructor
-    public Store(int storeId, int userId, String storeName) {
-        this.storeId = storeId;
+    public Store(int userId, String name) {
         this.userId = userId;
-        this.storeName = storeName;
+        this.name = name;
     }
 
-    // Getter and Setter methods for storeId
-    public int getStoreId() {
-        return storeId;
-    }
 
-    public void setStoreId(int storeId) {
-        this.storeId = storeId;
-    }
-
-    // Getter and Setter methods for userId
     public int getUserId() {
         return userId;
     }
@@ -29,21 +18,11 @@ public class Store {
         this.userId = userId;
     }
 
-    // Getter and Setter methods for storeName
-    public String getStoreName() {
-        return storeName;
+    public String getName() {
+        return name;
     }
 
-    public void setStoreName(String storeName) {
-        this.storeName = storeName;
-    }
-
-    @Override
-    public String toString() {
-        return "Store{" +
-                "storeId=" + storeId +
-                ", userId=" + userId +
-                ", storeName='" + storeName + '\'' +
-                '}';
+    public void setName(String name) {
+        this.name = name;
     }
 }

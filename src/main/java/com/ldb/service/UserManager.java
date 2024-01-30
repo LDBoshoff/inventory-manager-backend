@@ -82,4 +82,24 @@ public class UserManager {
             return false;
         }
     }
+
+    public Integer getUserIdByEmail(String email) {
+        Integer userId = null;
+
+        String query = "SELECT id FROM users WHERE email = ?"; 
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) { 
+            preparedStatement.setString(1, email);
+            ResultSet resultSet = preparedStatement.executeQuery();   
+
+            if (resultSet.next()) {
+                userId = resultSet.getInt("id");
+                
+            }
+        } catch (Exception e) {
+            return userId;
+        }
+
+        return userId;
+    }
 }
