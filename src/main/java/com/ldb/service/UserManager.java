@@ -90,7 +90,6 @@ public class UserManager {
         
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {  
             preparedStatement.setInt(1, id);
-            
             ResultSet resultSet = preparedStatement.executeQuery();
             
             if (resultSet.next()) {
@@ -110,23 +109,27 @@ public class UserManager {
     }
     
 
-    public Integer getUserIdByEmail(String email) {
-        Integer userId = null;
-
-        String query = "SELECT id FROM users WHERE email = ?"; 
+    public User getUserByEmail(String email) {
+        User user = null;
+        String query = "SELECT * FROM users WHERE email = ?"; 
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) { 
             preparedStatement.setString(1, email);
             ResultSet resultSet = preparedStatement.executeQuery();   
 
             if (resultSet.next()) {
-                userId = resultSet.getInt("id");
-                
+                user = new User(
+                    resultSet.getInt("id"),
+                    resultSet.getString("first_name"),
+                    resultSet.getString("last_name"),
+                    resultSet.getString("email"),
+                    resultSet.getString("password") // Remember, in real-world scenarios, this should be handled securely
+                );
             }
         } catch (Exception e) {
-            return userId;
+            e.printStackTrace();
         }
 
-        return userId;
+        return user;
     }
 }
