@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/inventory_db";  // Database URL
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/ecommerce_db";  // Database URL
     private static final String DB_USER = "otheruser";                                        // MySQL username
     private static final String DB_PASSWORD = "swordfish";                                    // MySQL password
 
@@ -19,3 +19,4 @@ public class DatabaseConnection {
         return connection;
     }
 }
+
