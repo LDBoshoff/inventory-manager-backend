@@ -23,14 +23,11 @@ public class StoreManager {
         return instance;
     }
 
-    public boolean createStore(int userId, String storeName) {
-        String query = "INSERT INTO stores (store_name, user_id) VALUES (?, ?)";
-        // Assuming the store name is passed. Modify as needed.
-        // Store store = new Store(userId, storeName);
-
+    public boolean createStore(Store newStore) {
+        String query = "INSERT INTO stores (user_id, name) VALUES (?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(2, userId);
-            preparedStatement.setString(1, storeName);
+            preparedStatement.setInt(1, newStore.getUserId());
+            preparedStatement.setString(2, newStore.getName());
             
             int rowsInserted = preparedStatement.executeUpdate();
             
