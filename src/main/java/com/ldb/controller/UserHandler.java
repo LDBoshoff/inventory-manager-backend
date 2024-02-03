@@ -3,6 +3,7 @@ package main.java.com.ldb.controller;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import main.java.com.ldb.model.User;
 import main.java.com.ldb.service.StoreManager;
 import main.java.com.ldb.service.UserManager;
 import main.java.com.ldb.utils.*;
@@ -91,18 +92,11 @@ public class UserHandler implements HttpHandler {
             return;
         }
 
-        // Attempt to add the user to the database
-        if (userManager.addUser(email, password, firstName, lastName)) {
-            Integer userId = userManager.getUserIdByEmail(email);
+        User newUser = new User(firstName, lastName, email, password);
 
-            if (userId != null) {
-                String storeName = firstName + "'s Store";
-                storeManager.createStore(userId, storeName);
-                
-                Response.sendResponse(exchange, 200, "User registered successfully");
-            } else {
-                Response.sendResponse(exchange, 500, "Failed to register user.");
-            }
+        // Attempt to add the user to the database
+        if (newUser != null && userManager.addUser(newUser)) {
+            Response.sendResponse(exchange, 200, "User registered successfully");
 
            
         } else {
