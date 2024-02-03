@@ -1,6 +1,7 @@
 package main.java.com.ldb.service;
 import java.sql.*;
 
+import main.java.com.ldb.model.User;
 import main.java.com.ldb.utils.DatabaseConnection;
 
 public class UserManager {
@@ -65,14 +66,14 @@ public class UserManager {
         return unique;
     }
 
-    public boolean addUser(String email, String password, String firstName, String lastName)  {
+    public boolean addUser(User newUser)  {
         String query = "INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)";
     
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setString(1, email);
-            preparedStatement.setString(2, password);
-            preparedStatement.setString(3, firstName);
-            preparedStatement.setString(4, lastName);
+            preparedStatement.setString(1, newUser.getEmail());
+            preparedStatement.setString(2, newUser.getPassword());
+            preparedStatement.setString(3, newUser.getFirstName());
+            preparedStatement.setString(4, newUser.getLastName());
             
             int rowsInserted = preparedStatement.executeUpdate();
             
@@ -82,6 +83,32 @@ public class UserManager {
             return false;
         }
     }
+
+    public User getUserById(int id) {
+        User user = null;
+        String query = "SELECT * FROM users WHERE id = ?";
+        
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {  
+            preparedStatement.setInt(1, id);
+            
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                user = new User(
+                    resultSet.getInt("id"),
+                    resultSet.getString("first_name"),
+                    resultSet.getString("last_name"),
+                    resultSet.getString("email"),
+                    resultSet.getString("password") // Remember, in real-world scenarios, this should be handled securely
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return user;
+    }
+    
 
     public Integer getUserIdByEmail(String email) {
         Integer userId = null;
