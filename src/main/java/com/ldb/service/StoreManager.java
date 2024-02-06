@@ -62,5 +62,21 @@ public class StoreManager {
         
         return null; // Return null if no store is found or if there's an exception
     }
+    
+    public boolean updateStore(Store store) {
+        String query = "UPDATE stores SET name = ?, user_id = ? WHERE id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, store.getName());
+            preparedStatement.setInt(2, store.getUserId());
+            preparedStatement.setInt(3, store.getId());
+    
+            int rowsUpdated = preparedStatement.executeUpdate();
+            
+            return rowsUpdated == 1; // Check if the update was successful
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }
