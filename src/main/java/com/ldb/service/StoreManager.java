@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.mysql.cj.protocol.Resultset;
+
 import main.java.com.ldb.model.Store;
 import main.java.com.ldb.utils.DatabaseConnection;
 
@@ -77,6 +79,25 @@ public class StoreManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean verifyOwnership(int userId, int storeId) {
+        String query = "SELECT COUNT(*) AS count FROM stores WHERE id = ? AND user_id = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, storeId);
+            preparedStatement.setInt(2, userId);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("count") > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
 }
