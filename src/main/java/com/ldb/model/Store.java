@@ -42,5 +42,14 @@ public class Store {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public String toString() {
+        return "Store{" +
+               "id=" + id +
+               ", userId=" + userId +
+               ", name='" + name + '\'' +
+               '}';
+    }
 }
 
