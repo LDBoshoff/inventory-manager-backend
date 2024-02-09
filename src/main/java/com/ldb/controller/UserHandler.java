@@ -148,9 +148,14 @@ public class UserHandler implements HttpHandler {
         // Confirms email & password combo
         if (userManager.validDetails(email, password)) {
             User retrievedUser = userManager.getUserByEmail(email);
-            String token = JwtUtil.createToken(retrievedUser.getId());                                  // Generate a JWT with email
+            String token = JwtUtil.createToken(retrievedUser.getId()); 
             exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
-            Response.sendResponse(exchange, 200, "Logged in");
+
+            Store store = storeManager.getStoreByUserId(retrievedUser.getId());
+            String responsePayload = String.format("{\"message\": \"Logged in\", \"storeId\": \"%s\"}", store.getId());            
+            exchange.getResponseHeaders().set("Content-Type", "application/json"); // Set Content-Type header to application/json
+           
+            Response.sendResponse(exchange, 200, responsePayload);             // Send response with JSON payload
         } else {
             Response.sendResponse(exchange, 401, "Incorrect Details"); // Check that status code is correct
         }
