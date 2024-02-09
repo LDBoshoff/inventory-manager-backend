@@ -147,7 +147,8 @@ public class UserHandler implements HttpHandler {
 
         // Confirms email & password combo
         if (userManager.validDetails(email, password)) {
-            String token = JwtUtil.createToken(email);                                  // Generate a JWT with email
+            User retrievedUser = userManager.getUserByEmail(email);
+            String token = JwtUtil.createToken(retrievedUser.getId());                                  // Generate a JWT with email
             exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
             Response.sendResponse(exchange, 200, "Logged in");
         } else {
