@@ -51,115 +51,79 @@ public class UserHandler implements HttpHandler {
     }
 
     private void handleRegistration(HttpExchange exchange) throws IOException {
-        InputStream requestBody = exchange.getRequestBody();
-        
-        if (Request.emptyRequest(requestBody)) {
-            Response.sendResponse(exchange, 400, "Bad Request - Empty Request");
-            return;
-        }
-        
-        // Parse the JSON object
-        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
-
-        if (jsonObject == null) {
-            Response.sendResponse(exchange, 500, "JSON EXCEPTION");
-            return;
-        }
-        
-        String[] requiredFields = {"firstName", "lastName", "email", "password"};       
-        
-        Map<String, String> fieldValues = new HashMap<>(); // Map to store field names and their corresponding values
- 
-        for (String field : requiredFields) {           // Check for missing or empty required fields and store their values in the map
-            String value = jsonObject.optString(field); // get values from json object - returns empty string for missing key or empty value
-            
-            if (Request.isNullOrEmpty(value)) {
-                Response.sendResponse(exchange, 400, "Bad Request - Missing or empty required data in JSON request");
+        try {
+            Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"firstName", "lastName", "email", "password"});
+    
+            String email = fieldValues.get("email");
+            if (!userManager.uniqueEmail(email)) {
+                Response.sendResponse(exchange, 409, "Email is not unique");
                 return;
             }
-            
-            fieldValues.put(field, value); // Store the field name and its value in the map
+    
+            User newUser = new User(fieldValues.get("firstName"), fieldValues.get("lastName"), email, fieldValues.get("password"));
+            if (userManager.addUser(newUser)) {
+                User retrievedUser = userManager.getUserByEmail(newUser.getEmail());
+                Store newStore = new Store(retrievedUser.getId(), "Default store name");
+                storeManager.createStore(newStore);
+                Response.sendResponse(exchange, 200, "User registered successfully");
+            } else {
+                Response.sendResponse(exchange, 500, "Failed to register user.");
+            }
+        } catch (IllegalArgumentException e) {
+            Response.sendResponse(exchange, 400, e.getMessage());
         }
-
-        // Store values in request
-        String firstName = fieldValues.get("firstName");
-        String lastName = fieldValues.get("lastName");
-        String email = fieldValues.get("email");
-        String password = fieldValues.get("password");
-
-        // Check for unique email
-        if (!userManager.uniqueEmail(email)) {
-            Response.sendResponse(exchange, 409, "Email is not unique");
-            return;
-        }
-
-        User newUser = new User(firstName, lastName, email, password);
-        
-        // Attempt to add the user to the database       
-        if (newUser != null && userManager.addUser(newUser)) {
-            User retrievedUser = userManager.getUserByEmail(newUser.getEmail());
-            String storeName = "Default store name";
-            // System.out.println("user id = " + retrievedUser.getId() + ", store name = " + storeName);
-            // System.out.println("store name = " + storeName);
-
-            Store newStore = new Store(retrievedUser.getId(), storeName);
-            storeManager.createStore(newStore);
-            Response.sendResponse(exchange, 200, "User registered successfully");
-        } else {
-            Response.sendResponse(exchange, 500, "Failed to register user.");
-        }        
     }
 
     private void handleLogin(HttpExchange exchange) throws IOException {
-        InputStream requestBody = exchange.getRequestBody();
+        try {
+            Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"email", "password"});
+    
+            String email = fieldValues.get("email");
+            String password = fieldValues.get("password");
+            if (userManager.validDetails(email, password)) {
+                User retrievedUser = userManager.getUserByEmail(email); // retrieve the user 
+                Store store = storeManager.getStoreByUserId(retrievedUser.getId());
 
-        if (Request.emptyRequest(requestBody)) {
-            Response.sendResponse(exchange, 400, "Bad Request - Empty Request");
-            return;
-        }
-        
-        // Parse the JSON object
-        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
+                if (store == null) {
+                    Response.sendResponse(exchange, 500, "{\"message\": \"Critical error: No store found for user.\"}");
+                    return;
+                }
 
-        if (jsonObject == null) {
-            Response.sendResponse(exchange, 500, "JSON EXCEPTION");
-            return;
-        }
-
-        String[] requiredFields = {"email", "password"};       
-        
-        Map<String, String> fieldValues = new HashMap<>(); // Map to store field names and their corresponding values
- 
-        for (String field : requiredFields) {           // Check for missing or empty required fields and store their values in the map
-            String value = jsonObject.optString(field); // get values from json object - returns empty string for missing key or empty value
-            
-            if (Request.isNullOrEmpty(value)) {
-                Response.sendResponse(exchange, 400, "Bad Request - Missing or empty required data in JSON request");
-                return;
+                // Proceed with login as both user and store exist
+                String token = JwtUtil.createToken(retrievedUser.getId()); // Create JWT with user's ID
+                exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
+    
+                String responsePayload = String.format("{\"message\": \"Logged in successfully\", \"storeId\": \"%d\"}", store.getId());
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                Response.sendResponse(exchange, 200, responsePayload);
+            } else {
+                Response.sendResponse(exchange, 401, "Incorrect Details");
             }
-            
-            fieldValues.put(field, value); // Store the field name and its value in the map
+        } catch (IllegalArgumentException e) {
+            Response.sendResponse(exchange, 400, e.getMessage());
         }
-
-        // Store values in request
-        String email = fieldValues.get("email");
-        String password = fieldValues.get("password");
-
-        // Confirms email & password combo
-        if (userManager.validDetails(email, password)) {
-            User retrievedUser = userManager.getUserByEmail(email);
-            String token = JwtUtil.createToken(retrievedUser.getId()); 
-            exchange.getResponseHeaders().set("Authorization", "Bearer " + token);  // Add JWT to the response header
-
-            Store store = storeManager.getStoreByUserId(retrievedUser.getId());
-            String responsePayload = String.format("{\"message\": \"Logged in\", \"storeId\": \"%s\"}", store.getId());            
-            exchange.getResponseHeaders().set("Content-Type", "application/json"); // Set Content-Type header to application/json
-           
-            Response.sendResponse(exchange, 200, responsePayload);             // Send response with JSON payload
-        } else {
-            Response.sendResponse(exchange, 401, "Incorrect Details"); // Check that status code is correct
-        }
-       
     }
+
+    private Map<String, String> parseAndValidateFields(InputStream requestBody, String[] requiredFields) throws IOException {
+        if (Request.emptyRequest(requestBody)) {
+            throw new IllegalArgumentException("Bad Request - Empty Request");
+        }
+
+        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
+        if (jsonObject == null) {
+            throw new IllegalArgumentException("JSON EXCEPTION");
+        }
+
+        Map<String, String> fieldValues = new HashMap<>();
+        for (String field : requiredFields) {
+            String value = jsonObject.optString(field);
+            if (Request.isNullOrEmpty(value)) {
+                throw new IllegalArgumentException("Bad Request - Missing or empty required data in JSON request");
+            }
+            fieldValues.put(field, value);
+        }
+        return fieldValues;
+    }
+
   
-}
+}   
