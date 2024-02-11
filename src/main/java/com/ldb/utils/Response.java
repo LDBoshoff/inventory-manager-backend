@@ -11,9 +11,6 @@ import com.sun.net.httpserver.HttpExchange;
 public class Response {
     
     public static void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
-        // JSONObject json = new JSONObject(response);
-        // response = json.toString();
-
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // test if redundant
         exchange.getResponseHeaders().set("Access-Control-Expose-Headers", "Authorization");
         exchange.sendResponseHeaders(statusCode, response.length());
