@@ -38,7 +38,7 @@ public class StoreHandler implements HttpHandler {
             String[] parts = path.split("/");
             
             if (parts.length > 3) {
-                int storeId = validateStoreId(parts[3], exchange);
+                int storeId = validateStoreId(parts[3]);
                 if (storeId == -1) {
                     Response.sendResponse(exchange, 400, "Invalid store ID");
                 }
@@ -66,7 +66,7 @@ public class StoreHandler implements HttpHandler {
             
             if (parts.length > 3) {
                 try {
-                    int storeId = validateStoreId(parts[3], exchange);
+                    int storeId = validateStoreId(parts[3]);
                     if (storeId == -1) {
                         Response.sendResponse(exchange, 400, "Invalid store ID");
                     }
@@ -76,7 +76,7 @@ public class StoreHandler implements HttpHandler {
                         return;
                     }
 
-                    Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"name"});
+                    Map<String, String> fieldValues = Request.parseAndValidateFields(exchange.getRequestBody(), new String[]{"name"});
                     int userId = JwtUtil.extractUserIdFromToken(JwtUtil.extractJWTfromHeader(exchange));
                     Store updatedStore = new Store(storeId, userId, fieldValues.get("name"));
                     // Update the store details
@@ -99,11 +99,10 @@ public class StoreHandler implements HttpHandler {
         }
     }
 
-    private int validateStoreId(String part, HttpExchange exchange) throws IOException {
+    private int validateStoreId(String part) throws IOException {
         try {
             return Integer.parseInt(part);
         } catch (NumberFormatException e) {
-            Response.sendResponse(exchange, 400, "Invalid store ID");
             return -1;
         }
     }
@@ -119,25 +118,5 @@ public class StoreHandler implements HttpHandler {
         return true;
     }
 
-    private Map<String, String> parseAndValidateFields(InputStream requestBody, String[] requiredFields) throws IOException {
-        if (Request.emptyRequest(requestBody)) {
-            throw new IllegalArgumentException("Bad Request - Empty Request");
-        }
-
-        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
-        if (jsonObject == null) {
-            throw new IllegalArgumentException("JSON EXCEPTION");
-        }
-
-        Map<String, String> fieldValues = new HashMap<>();
-        for (String field : requiredFields) {
-            String value = jsonObject.optString(field);
-            if (Request.isNullOrEmpty(value)) {
-                throw new IllegalArgumentException("Bad Request - Missing or empty required data in JSON request");
-            }
-            fieldValues.put(field, value);
-        }
-        return fieldValues;
-    }
 }
 
