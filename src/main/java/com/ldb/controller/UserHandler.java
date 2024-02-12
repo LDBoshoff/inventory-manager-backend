@@ -52,7 +52,7 @@ public class UserHandler implements HttpHandler {
 
     private void handleRegistration(HttpExchange exchange) throws IOException {
         try {
-            Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"firstName", "lastName", "email", "password"});
+            Map<String, String> fieldValues = Request.parseAndValidateFields(exchange.getRequestBody(), new String[]{"firstName", "lastName", "email", "password"});
     
             String email = fieldValues.get("email");
             if (!userManager.uniqueEmail(email)) {
@@ -76,7 +76,7 @@ public class UserHandler implements HttpHandler {
 
     private void handleLogin(HttpExchange exchange) throws IOException {
         try {
-            Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"email", "password"});
+            Map<String, String> fieldValues = Request.parseAndValidateFields(exchange.getRequestBody(), new String[]{"email", "password"});
     
             String email = fieldValues.get("email");
             String password = fieldValues.get("password");
@@ -103,27 +103,5 @@ public class UserHandler implements HttpHandler {
             Response.sendResponse(exchange, 400, e.getMessage());
         }
     }
-
-    private Map<String, String> parseAndValidateFields(InputStream requestBody, String[] requiredFields) throws IOException {
-        if (Request.emptyRequest(requestBody)) {
-            throw new IllegalArgumentException("Bad Request - Empty Request");
-        }
-
-        JSONObject jsonObject = Request.parseJsonRequest(requestBody);
-        if (jsonObject == null) {
-            throw new IllegalArgumentException("JSON EXCEPTION");
-        }
-
-        Map<String, String> fieldValues = new HashMap<>();
-        for (String field : requiredFields) {
-            String value = jsonObject.optString(field);
-            if (Request.isNullOrEmpty(value)) {
-                throw new IllegalArgumentException("Bad Request - Missing or empty required data in JSON request");
-            }
-            fieldValues.put(field, value);
-        }
-        return fieldValues;
-    }
-
   
 }   
