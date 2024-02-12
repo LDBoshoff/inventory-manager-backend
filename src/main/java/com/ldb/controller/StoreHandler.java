@@ -38,25 +38,14 @@ public class StoreHandler implements HttpHandler {
             String[] parts = path.split("/");
             
             if (parts.length > 3) {
-                int storeId = 0;
-
-                try {
-                    storeId = Integer.parseInt(parts[3]);
-                } catch (NumberFormatException e) {
+                int storeId = validateStoreId(parts[3], exchange);
+                if (storeId == -1) {
                     Response.sendResponse(exchange, 400, "Invalid store ID");
-                    return;
                 }
 
-                String jwt = JwtUtil.extractJWTfromHeader(exchange);
-                if (!JwtUtil.authenticate(jwt)) {
+                if (authenticateAndAuthorize(exchange, storeId)) {
                     Response.sendResponse(exchange, 401, "Unauthorized");
                     return;
-                }
-
-                int userId = JwtUtil.extractUserIdFromToken(jwt);
-
-                if (!storeManager.verifyOwnership(userId, storeId)) {
-                    Response.sendResponse(exchange, 401, "Unauthorized - not owner");
                 }
 
                 Store store = storeManager.getStoreById(storeId);
@@ -77,27 +66,18 @@ public class StoreHandler implements HttpHandler {
             
             if (parts.length > 3) {
                 try {
-                    int storeId = 0;
-                    try {
-                        storeId = Integer.parseInt(parts[3]);
-                    } catch (NumberFormatException e) {
+                    int storeId = validateStoreId(parts[3], exchange);
+                    if (storeId == -1) {
                         Response.sendResponse(exchange, 400, "Invalid store ID");
-                        return;
                     }
 
-                    String jwt = JwtUtil.extractJWTfromHeader(exchange);
-                    if (!JwtUtil.authenticate(jwt)) {
+                    if (authenticateAndAuthorize(exchange, storeId)) {
                         Response.sendResponse(exchange, 401, "Unauthorized");
                         return;
                     }
 
-                    int userId = JwtUtil.extractUserIdFromToken(jwt);
-                    if (!storeManager.verifyOwnership(userId, storeId)) {
-                        Response.sendResponse(exchange, 401, "Unauthorized - not owner");
-                        return;
-                    }
-
                     Map<String, String> fieldValues = parseAndValidateFields(exchange.getRequestBody(), new String[]{"name"});
+                    int userId = JwtUtil.extractUserIdFromToken(JwtUtil.extractJWTfromHeader(exchange));
                     Store updatedStore = new Store(storeId, userId, fieldValues.get("name"));
                     // Update the store details
                     boolean updateSuccess = storeManager.updateStore(updatedStore);
@@ -117,6 +97,26 @@ public class StoreHandler implements HttpHandler {
         } else {
             Response.sendResponse(exchange, 405, "Method not allowed for this endpoint.");
         }
+    }
+
+    private int validateStoreId(String part, HttpExchange exchange) throws IOException {
+        try {
+            return Integer.parseInt(part);
+        } catch (NumberFormatException e) {
+            Response.sendResponse(exchange, 400, "Invalid store ID");
+            return -1;
+        }
+    }
+
+    private boolean authenticateAndAuthorize(HttpExchange exchange, int storeId) throws IOException {
+        String jwt = JwtUtil.extractJWTfromHeader(exchange);
+        int userId = JwtUtil.extractUserIdFromToken(jwt);
+
+        if (!JwtUtil.authenticate(jwt) && !storeManager.verifyOwnership(userId, storeId)) {
+            return false;
+        }
+        
+        return true;
     }
 
     private Map<String, String> parseAndValidateFields(InputStream requestBody, String[] requiredFields) throws IOException {
@@ -140,3 +140,4 @@ public class StoreHandler implements HttpHandler {
         return fieldValues;
     }
 }
+
