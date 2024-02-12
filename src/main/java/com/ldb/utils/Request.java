@@ -2,6 +2,8 @@ package main.java.com.ldb.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,21 +11,42 @@ import org.json.JSONTokener;
 
 public class Request {
     // Helper method to check if a string is null or empty
-    public static boolean isNullOrEmpty(String str) {
+    private static boolean isNullOrEmpty(String str) {
         return str == null || str.trim().isEmpty();
     }
 
     // Helper method to check if the request body is empty
-    public static boolean emptyRequest(InputStream inputStream) {
+    private static boolean emptyRequest(InputStream inputStream) {
         return inputStream == null;
     }
 
     // Helper method to parse the JSON request
-    public static JSONObject parseJsonRequest(InputStream inputStream) throws IOException {
+    private static JSONObject parseJsonRequest(InputStream inputStream) throws IOException {
         try {
             return new JSONObject(new JSONTokener(inputStream));
         } catch (JSONException e) {
             return null;
         }
+    }
+
+    public static Map<String, String> parseAndValidateFields(InputStream requestBody, String[] requiredFields) throws IOException {
+        if (Request.emptyRequest(requestBody)) {
+            throw new IllegalArgumentException("Bad Request - Empty Request");
+        }
+
+        JSONObject jsonObject = parseJsonRequest(requestBody);
+        if (jsonObject == null) {
+            throw new IllegalArgumentException("JSON EXCEPTION");
+        }
+
+        Map<String, String> fieldValues = new HashMap<>();
+        for (String field : requiredFields) {
+            String value = jsonObject.optString(field);
+            if (Request.isNullOrEmpty(value)) {
+                throw new IllegalArgumentException("Bad Request - Missing or empty required data in JSON request");
+            }
+            fieldValues.put(field, value);
+        }
+        return fieldValues;
     }
 }
