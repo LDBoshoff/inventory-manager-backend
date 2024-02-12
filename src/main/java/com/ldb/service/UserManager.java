@@ -108,7 +108,6 @@ public class UserManager {
         return user;
     }
     
-
     public User getUserByEmail(String email) {
         User user = null;
         String query = "SELECT * FROM users WHERE email = ?"; 
