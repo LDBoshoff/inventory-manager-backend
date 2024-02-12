@@ -114,5 +114,19 @@ public class ProductManager {
         }
     }
 
-    // verify product belongs to store method
+    public boolean deleteProduct(int productId) {
+        String query = "DELETE FROM products WHERE id = ?";
+        
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, productId);
+            
+            int rowsDeleted = preparedStatement.executeUpdate();
+            
+            return rowsDeleted > 0; // Return true if the deletion was successful
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
