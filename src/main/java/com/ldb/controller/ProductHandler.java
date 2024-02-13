@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import main.java.com.ldb.model.Product;
 import main.java.com.ldb.service.ProductManager;
+import main.java.com.ldb.service.StoreManager;
 import main.java.com.ldb.utils.JwtUtil;
 import main.java.com.ldb.utils.Request;
 import main.java.com.ldb.utils.Response;
@@ -19,9 +20,11 @@ import main.java.com.ldb.utils.Response;
 public class ProductHandler implements HttpHandler {
 
     private final ProductManager productManager;
+    private final StoreManager storeManager;
 
     public ProductHandler() {
         this.productManager = ProductManager.getInstance();
+        this.storeManager = StoreManager.getInstance();
     }
 
     @Override
@@ -34,15 +37,18 @@ public class ProductHandler implements HttpHandler {
             String path = exchange.getRequestURI().getPath();
             String query = exchange.getRequestURI().getQuery();
             
-            Map<String, String> queryParams = parseQueryString(query);
+            Map<String, String> queryParams = Request.parseQueryString(query);
 
             if (path.equals("/api/products") && queryParams.containsKey("storeId")) {
-                System.out.println("path = " + path + ", query = " + query);
-               
                 // // Retrieve all products for a specific store
                 int storeId = validateStoreId(queryParams.get("storeId"));
                 if (storeId == -1) {
                     Response.sendResponse(exchange, 400, "Invalid store ID");
+                    return;
+                }
+
+                if (!authenticateAndAuthorize(exchange, storeId)) {
+                    Response.sendResponse(exchange, 401, "Unauthorized");
                     return;
                 }
 
@@ -56,12 +62,18 @@ public class ProductHandler implements HttpHandler {
             } else if (path.matches("/api/products/\\d+")) { // Regex to match /api/products/{productId}
                 // Retrieve a specific product by productId
                 int productId = Integer.parseInt(path.substring(path.lastIndexOf('/') + 1));
-                System.out.println("product id = " + productId);
+
                 Product product = productManager.getProductById(productId);
                 
                 if (product == null) {
                     Response.sendResponse(exchange, 404, "Product not found");
                 } else {
+
+                    if (!authenticateAndAuthorize(exchange, product.getStoreId())) {
+                        Response.sendResponse(exchange, 401, "Unauthorized");
+                        return;
+                    }
+
                     Response.sendResponse(exchange, 200, new JSONObject(product).toString());
                 }
             } else {
@@ -77,6 +89,22 @@ public class ProductHandler implements HttpHandler {
             return -1;
         }
     }
+
+    private boolean authenticateAndAuthorize(HttpExchange exchange, int storeId) throws IOException {
+        String jwt = JwtUtil.extractJWTfromHeader(exchange);
+        if (jwt == null) {
+            return false;
+        }
+
+        int userId = JwtUtil.extractUserIdFromToken(jwt);
+
+        if (!JwtUtil.authenticate(jwt) || !storeManager.verifyOwnership(userId, storeId)) {
+            return false;
+        }
+        
+        return true;
+    }
+
      
     // private int validateProductId(String part, HttpExchange exchange) throws IOException {
     //     try {
@@ -86,25 +114,5 @@ public class ProductHandler implements HttpHandler {
     //         return -1;
     //     }
     // }
-
-    public static Map<String, String> parseQueryString(String queryString) {
-        Map<String, String> queryMap = new HashMap<>();
-        if (queryString != null && !queryString.isEmpty()) {
-            String[] pairs = queryString.split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                try {
-                    // URL decoding is omitted for simplicity but should be considered in real-world applications
-                    String key = idx > 0 ? pair.substring(0, idx) : pair;
-                    String value = idx > 0 && pair.length() > idx + 1 ? pair.substring(idx + 1) : null;
-                    queryMap.put(key, value);
-                } catch (Exception e) {
-                    // Handle exceptions or invalid parameters as necessary
-                    System.err.println("Error parsing query string: " + e.getMessage());
-                }
-            }
-        }
-        return queryMap;
-    }
 }
 
