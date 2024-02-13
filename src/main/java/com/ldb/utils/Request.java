@@ -49,4 +49,24 @@ public class Request {
         }
         return fieldValues;
     }
+
+    public static Map<String, String> parseQueryString(String queryString) {
+        Map<String, String> queryMap = new HashMap<>();
+        if (queryString != null && !queryString.isEmpty()) {
+            String[] pairs = queryString.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                try {
+                    // URL decoding is omitted for simplicity but should be considered in real-world applications
+                    String key = idx > 0 ? pair.substring(0, idx) : pair;
+                    String value = idx > 0 && pair.length() > idx + 1 ? pair.substring(idx + 1) : null;
+                    queryMap.put(key, value);
+                } catch (Exception e) {
+                    // Handle exceptions or invalid parameters as necessary
+                    System.err.println("Error parsing query string: " + e.getMessage());
+                }
+            }
+        }
+        return queryMap;
+    }
 }
