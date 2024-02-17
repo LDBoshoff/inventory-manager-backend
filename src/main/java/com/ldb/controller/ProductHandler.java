@@ -52,8 +52,7 @@ public class ProductHandler implements HttpHandler {
                 handleCreateProduct(exchange);
                 break;
             case "PUT":
-                Response.sendResponse(exchange, 200, "PUT Successful");
-                // handleUpdateProduct(exchange, path);
+                handleUpdateProduct(exchange, path, query);
                 break;
             case "DELETE":
                 Response.sendResponse(exchange, 200, "DELETE Successful");
@@ -142,29 +141,27 @@ public class ProductHandler implements HttpHandler {
         return storeManager.verifyOwnership(userId, storeId);
     }
 
-    private void handleCreateProduct(HttpExchange exchange) throws IOException {
+    private void handleCreateProduct(HttpExchange exchange, String path) throws IOException {
+        if (!path.equals("/api/products")) {
+            Response.sendResponse(exchange, 404, "Not Found: Invalid path for creating a product.");
+        }
+
         String[] requiredFields = new String[]{"name", "price", "quantity", "storeId"};
     
         try {
-            Map<String, String> productData = Request.parseAndValidateFields(exchange.getRequestBody(), requiredFields);             // Parse and validate request body fields
-
-            String name = productData.get("name");
-            double price = Double.parseDouble(productData.get("price"));
-            int quantity = Integer.parseInt(productData.get("quantity"));
-            int storeId = Integer.parseInt(productData.get("storeId"));
+            Map<String, String> productData = Request.parseAndValidateFields(exchange.getRequestBody(), requiredFields);   // Parse and validate request body field
+            Product product = Request.productFromMap(productData); // parse the data into product object
     
             // Check authorization before proceeding
-            if (!isAuthorized(exchange, storeId)) {
+            if (!isAuthorized(exchange, product.getStoreId())) {
                 Response.sendResponse(exchange, 403, "Forbidden");
                 return;
             }
-    
-            Product product = new Product(name, price, quantity, storeId);
             
             boolean isCreated = productManager.createProduct(product);
             
             if (isCreated) {
-                Product retrievedProduct = productManager.getProductByNameAndStoreId(name, storeId); // this line is incorrect
+                Product retrievedProduct = productManager.getProductByNameAndStoreId(product.getName(), product.getStoreId()); 
                 Response.sendResponse(exchange, 201, new JSONObject(retrievedProduct).toString());
             } else {
                 Response.sendResponse(exchange, 500, "Failed to create product");
@@ -175,6 +172,17 @@ public class ProductHandler implements HttpHandler {
             Response.sendResponse(exchange, 500, "Internal Server Error");
         }
     }
+
+    private void handleUpdateProduct(HttpExchange exchange, String path, String query) throws IOException {
+        if (path.matches("/api/products/\\d+") && query == null) {
+
+            
+        } else {
+            Response.sendResponse(exchange, 400, "Invalid request");
+        }
+       
+    }
+    
     
 
 
