@@ -80,8 +80,9 @@ public class JwtUtil {
         }
     }
 
-    public static boolean authenticate(String token) {
-        // Token is considered authenticated if it's valid and not expired
+    public static boolean isAuthenticated(HttpExchange exchange) {
+        String token = extractJWTfromHeader(exchange);
         return verifyToken(token) && !isTokenExpired(token);
     }
+    
 }
