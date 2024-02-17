@@ -49,7 +49,7 @@ public class ProductHandler implements HttpHandler {
                 handleGetRequests(exchange, path, query);
                 break;
             case "POST":
-                handleCreateProduct(exchange);
+                handleCreateProduct(exchange, path);
                 break;
             case "PUT":
                 handleUpdateProduct(exchange, path, query);
@@ -175,16 +175,42 @@ public class ProductHandler implements HttpHandler {
 
     private void handleUpdateProduct(HttpExchange exchange, String path, String query) throws IOException {
         if (path.matches("/api/products/\\d+") && query == null) {
+            int productId = parseProductId(path);
+            Product product = productManager.getProductById(productId);
 
-            
+            if (product == null) {
+                Response.sendResponse(exchange, 404, "Product not found.");
+                return;
+            }
+
+            if (!isAuthorized(exchange, product.getStoreId())) {
+                Response.sendResponse(exchange, 403, "Forbidden");
+                return;
+            }
+
+            String[] requiredFields = new String[]{"name", "price", "quantity", "storeId"};
+    
+            try {
+                Map<String, String> productData = Request.parseAndValidateFields(exchange.getRequestBody(), requiredFields);   // Parse and validate request body field
+                Product productToUpdate = Request.productFromMap(productData); // parse the data into product object
+                productToUpdate.setId(productId);
+                productToUpdate.setStoreId(product.getStoreId());
+
+                boolean isUpdated = productManager.updateProduct(productToUpdate); 
+                if (isUpdated) {
+                    Response.sendResponse(exchange, 200, new JSONObject(productToUpdate).toString());
+                } else {
+                    Response.sendResponse(exchange, 500, "Failed to update product");
+                }
+            } catch (IllegalArgumentException e) {
+                Response.sendResponse(exchange, 400, e.getMessage());
+            } catch (Exception e) {
+                Response.sendResponse(exchange, 500, "Internal Server Error");
+            }
         } else {
-            Response.sendResponse(exchange, 400, "Invalid request");
+            Response.sendResponse(exchange, 400, "Invalid Request / Path");
         }
-       
     }
-    
-    
-
 
 }
 
