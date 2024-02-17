@@ -84,10 +84,10 @@ public class ProductHandler implements HttpHandler {
             return;
         }
 
-        // if (!authenticateAndAuthorize(exchange, storeId)) {
-        //     Response.sendResponse(exchange, 401, "Unauthorized");
-        //     return;
-        // }
+        if (!isAuthorized(exchange, storeId)) {
+            Response.sendResponse(exchange, 401, "Unauthorized");
+            return;
+        }
 
         List<Product> products = productManager.getProductsByStoreId(storeId);
         if (products.isEmpty()) {
@@ -107,10 +107,10 @@ public class ProductHandler implements HttpHandler {
             return;
         }
 
-        // if (!authenticateAndAuthorize(exchange, product.getStoreId())) {
-        //     Response.sendResponse(exchange, 401, "Unauthorized");
-        //     return;
-        // }
+        if (!isAuthorized(exchange, product.getStoreId())) {
+            Response.sendResponse(exchange, 401, "Unauthorized");
+            return;
+        }
 
         Response.sendResponse(exchange, 200, new JSONObject(product).toString());
     }
@@ -136,19 +136,11 @@ public class ProductHandler implements HttpHandler {
         }
     }
 
-    private boolean authenticateAndAuthorize(HttpExchange exchange, int storeId) throws IOException {
-        String jwt = JwtUtil.extractJWTfromHeader(exchange);
-        if (jwt == null) {
-            return false;
-        }
-
-        int userId = JwtUtil.extractUserIdFromToken(jwt);
-
-        if (!JwtUtil.authenticate(jwt) || !storeManager.verifyOwnership(userId, storeId)) {
-            return false;
-        }
+    private boolean isAuthorized(HttpExchange exchange, int storeId) { 
+        String token = JwtUtil.extractJWTfromHeader(exchange);
+        int userId = JwtUtil.extractUserIdFromToken(token);
         
-        return true;
+        return storeManager.verifyOwnership(userId, storeId);
     }
 
     // private void handleCreateProduct(HttpExchange exchange) throws IOException {
