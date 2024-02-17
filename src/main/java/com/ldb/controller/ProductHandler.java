@@ -1,6 +1,7 @@
 package main.java.com.ldb.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,12 +46,10 @@ public class ProductHandler implements HttpHandler {
                 Response.handlePreflight(exchange);
                 break;
             case "GET":
-                // Response.sendResponse(exchange, 200, "GET Successful");
                 handleGetRequests(exchange, path, query);
                 break;
             case "POST":
-                Response.sendResponse(exchange, 200, "POST Successful");
-                // handleCreateProduct(exchange);
+                handleCreateProduct(exchange);
                 break;
             case "PUT":
                 Response.sendResponse(exchange, 200, "PUT Successful");
@@ -143,52 +142,41 @@ public class ProductHandler implements HttpHandler {
         return storeManager.verifyOwnership(userId, storeId);
     }
 
-    // private void handleCreateProduct(HttpExchange exchange) throws IOException {
-    //     // Extract request body
-    //     String requestBody = new String(exchange.getRequestBody().readAllBytes());
-    //     JSONObject productData = new JSONObject(requestBody);
+    private void handleCreateProduct(HttpExchange exchange) throws IOException {
+        String[] requiredFields = new String[]{"name", "price", "quantity", "storeId"};
     
-    //     // Authentication and authorization omitted for brevity; add as needed
-    //     Product product = productManager.createProduct(productData);
-        
-    //     if (product == null) {
-    //         Response.sendResponse(exchange, 400, "Product creation failed");
-    //         return;
-    //     }
-        
-    //     Response.sendResponse(exchange, 201, new JSONObject(product).toString());
-    // }
+        try {
+            Map<String, String> productData = Request.parseAndValidateFields(exchange.getRequestBody(), requiredFields);             // Parse and validate request body fields
 
-    // private void handleUpdateProduct(HttpExchange exchange, String path) throws IOException {
-    //     int productId = Integer.parseInt(path.substring(path.lastIndexOf('/') + 1));
-        
-    //     // Extract request body
-    //     String requestBody = new String(exchange.getRequestBody().readAllBytes());
-    //     JSONObject productData = new JSONObject(requestBody);
+            String name = productData.get("name");
+            double price = Double.parseDouble(productData.get("price"));
+            int quantity = Integer.parseInt(productData.get("quantity"));
+            int storeId = Integer.parseInt(productData.get("storeId"));
     
-    //     // Authentication and authorization omitted for brevity; add as needed
-    //     Product updatedProduct = productManager.updateProduct(productId, productData);
-        
-    //     if (updatedProduct == null) {
-    //         Response.sendResponse(exchange, 404, "Product not found or update failed");
-    //         return;
-    //     }
-        
-    //     Response.sendResponse(exchange, 200, new JSONObject(updatedProduct).toString());
-    // }
+            // Check authorization before proceeding
+            if (!isAuthorized(exchange, storeId)) {
+                Response.sendResponse(exchange, 403, "Forbidden");
+                return;
+            }
+    
+            Product product = new Product(name, price, quantity, storeId);
+            
+            boolean isCreated = productManager.createProduct(product);
+            
+            if (isCreated) {
+                Product retrievedProduct = productManager.getProductByNameAndStoreId(name, storeId); // this line is incorrect
+                Response.sendResponse(exchange, 201, new JSONObject(retrievedProduct).toString());
+            } else {
+                Response.sendResponse(exchange, 500, "Failed to create product");
+            }
+        } catch (IllegalArgumentException e) {
+            Response.sendResponse(exchange, 400, e.getMessage());
+        } catch (Exception e) {
+            Response.sendResponse(exchange, 500, "Internal Server Error");
+        }
+    }
+    
 
-    // private void handleDeleteProduct(HttpExchange exchange, String path) throws IOException {
-    //     int productId = Integer.parseInt(path.substring(path.lastIndexOf('/') + 1));
-    
-    //     // Authentication and authorization omitted for brevity; add as needed
-    //     boolean success = productManager.deleteProduct(productId);
-        
-    //     if (!success) {
-    //         Response.sendResponse(exchange, 404, "Product not found or delete failed");
-    //         return;
-    //     }
-        
-    //     Response.sendResponse(exchange, 204, "");
-    // }
+
 }
 
