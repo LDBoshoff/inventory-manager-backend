@@ -55,8 +55,7 @@ public class ProductHandler implements HttpHandler {
                 handleUpdateProduct(exchange, path, query);
                 break;
             case "DELETE":
-                Response.sendResponse(exchange, 200, "DELETE Successful");
-                // handleDeleteProduct(exchange, path);
+                handleDeleteProduct(exchange, path, query);
                 break;
             default:
                 Response.sendResponse(exchange, 405, "Method not allowed for this endpoint.");
@@ -206,6 +205,32 @@ public class ProductHandler implements HttpHandler {
                 Response.sendResponse(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 Response.sendResponse(exchange, 500, "Internal Server Error");
+            }
+        } else {
+            Response.sendResponse(exchange, 400, "Invalid Request / Path");
+        }
+    }
+
+    private void handleDeleteProduct(HttpExchange exchange, String path, String query) throws IOException {
+        if (path.matches("/api/products/\\d+") && query == null) {
+            int productId = parseProductId(path);
+            Product product = productManager.getProductById(productId);
+
+            if (product == null) {
+                Response.sendResponse(exchange, 404, "Product not found.");
+                return;
+            }
+
+            if (!isAuthorized(exchange, product.getStoreId())) {
+                Response.sendResponse(exchange, 403, "Forbidden");
+                return;
+            }
+
+            boolean isDeleted = productManager.deleteProduct(productId);
+            if (isDeleted) {
+                Response.sendResponse(exchange, 204, "");
+            } else {
+                Response.sendResponse(exchange, 500, "Failed to delete product");
             }
         } else {
             Response.sendResponse(exchange, 400, "Invalid Request / Path");
