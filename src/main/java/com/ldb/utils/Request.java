@@ -9,6 +9,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import main.java.com.ldb.model.Product;
+
 public class Request {
     // Helper method to check if a string is null or empty
     private static boolean isNullOrEmpty(String str) {
@@ -48,6 +50,18 @@ public class Request {
             fieldValues.put(field, value);
         }
         return fieldValues;
+    }
+
+    public static Product productFromMap(Map<String, String> productData) throws IllegalArgumentException {
+        try {
+            String name = productData.get("name");
+            double price = Double.parseDouble(productData.get("price"));
+            int quantity = Integer.parseInt(productData.get("quantity"));
+            int storeId = Integer.parseInt(productData.get("storeId"));
+            return new Product(name, price, quantity, storeId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid product data value provided.");
+        }
     }
 
     public static Map<String, String> parseQueryString(String queryString) {
