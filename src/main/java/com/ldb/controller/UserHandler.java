@@ -10,12 +10,8 @@ import main.java.com.ldb.service.UserManager;
 import main.java.com.ldb.utils.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-import java.util.HashMap;
 import java.util.Map;
-
-import org.json.JSONObject;
 
 public class UserHandler implements HttpHandler {
 
@@ -87,10 +83,10 @@ public class UserHandler implements HttpHandler {
             String password = fieldValues.get("password");
             if (userManager.validDetails(email, password)) {
                 User retrievedUser = userManager.getUserByEmail(email); // retrieve the user 
-                Store store = storeManager.getStoreByUserId(retrievedUser.getId());
+                Store store = storeManager.getStoreByUserId(retrievedUser.getId()); // retrieve user's store
 
                 if (store == null) {
-                    Response.sendResponse(exchange, 500, "{\"message\": \"Critical error: No store found for user.\"}");
+                    Response.sendResponse(exchange, 500, "Login Unsuccessful. No store found for user.");
                     return;
                 }
 
