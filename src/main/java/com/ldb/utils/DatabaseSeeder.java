@@ -2,6 +2,7 @@ package main.java.com.ldb.utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DatabaseSeeder {
@@ -23,22 +24,34 @@ public class DatabaseSeeder {
         Connection connection = DatabaseConnection.getConnection();
         if (connection != null) {
             try {
-                String sqlInsertUser = "INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)";
-                PreparedStatement preparedStatement = connection.prepareStatement(sqlInsertUser);
+                // Check if the product already exists
+                String checkProductSQL = "SELECT COUNT(*) FROM users WHERE email = ? AND password = ?";
+                PreparedStatement checkStmt = connection.prepareStatement(checkProductSQL);
+                checkStmt.setString(1, email);
+                checkStmt.setString(2, password);
+                ResultSet rs = checkStmt.executeQuery();
 
-                preparedStatement.setString(1, email);
-                preparedStatement.setString(2, password);
-                preparedStatement.setString(3, firstName);
-                preparedStatement.setString(4, lastName);
-
-                int affectedRows = preparedStatement.executeUpdate();
-                if (affectedRows > 0) {
-                    System.out.println("User inserted successfully.");
-                } else {
-                    System.out.println("User insertion failed.");
+                int count = 0;
+                if (rs.next()) {
+                    count = rs.getInt(1);
                 }
+                
+                if (count == 0) {
+                    String sqlInsertUser = "INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)";
+                    PreparedStatement preparedStatement = connection.prepareStatement(sqlInsertUser);
 
-                preparedStatement.close();
+                    preparedStatement.setString(1, email);
+                    preparedStatement.setString(2, password);
+                    preparedStatement.setString(3, firstName);
+                    preparedStatement.setString(4, lastName);
+
+                    preparedStatement.executeUpdate();
+                    System.out.println("User inserted successfully.");
+                    preparedStatement.close();
+                } else {
+                    System.out.println("User already inserted.");
+                }
+                
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
@@ -55,20 +68,30 @@ public class DatabaseSeeder {
         Connection connection = DatabaseConnection.getConnection();
         if (connection != null) {
             try {
-                // Insert the store linked to John's user ID
-                String insertStoreSQL = "INSERT INTO stores (user_id, name) VALUES (?, ?)";
-                PreparedStatement insertStoreStmt = connection.prepareStatement(insertStoreSQL);
-                insertStoreStmt.setInt(1, userId); // Use the assumed user ID for John Doe
-                insertStoreStmt.setString(2, storeName);
+                // Check if the product already exists
+                String checkProductSQL = "SELECT COUNT(*) FROM stores WHERE user_id = ?";
+                PreparedStatement checkStmt = connection.prepareStatement(checkProductSQL);
+                checkStmt.setInt(1, userId);
+                ResultSet rs = checkStmt.executeQuery();
 
-                int affectedRows = insertStoreStmt.executeUpdate();
-                if (affectedRows > 0) {
+                int count = 0;
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+
+                if (count == 0) {
+                     // Insert the store linked to John's user ID
+                    String insertStoreSQL = "INSERT INTO stores (user_id, name) VALUES (?, ?)";
+                    PreparedStatement insertStoreStmt = connection.prepareStatement(insertStoreSQL);
+                    insertStoreStmt.setInt(1, userId); // Use the assumed user ID for John Doe
+                    insertStoreStmt.setString(2, storeName);
+
+                    insertStoreStmt.executeUpdate();
                     System.out.println("Store seeded successfully for John Doe.");
+                    insertStoreStmt.close();
                 } else {
                     System.out.println("Store seeding failed for John Doe.");
                 }
-
-                insertStoreStmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
@@ -82,33 +105,49 @@ public class DatabaseSeeder {
     }
 
     private static void insertProduct(int storeId, String name, double price, int quantity) {
-        // Assume connection is already established
         Connection connection = DatabaseConnection.getConnection();
         if (connection != null) {
             try {
-                String insertProductSQL = "INSERT INTO products (name, price, quantity, store_id) VALUES (?, ?, ?, ?)";
-                PreparedStatement preparedStatement = connection.prepareStatement(insertProductSQL);
-    
-                preparedStatement.setString(1, name);
-                preparedStatement.setDouble(2, price);
-                preparedStatement.setInt(3, quantity);
-                preparedStatement.setInt(4, storeId);
-    
-                // Execute the insert operation
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-                System.out.println("Product inserted successfully.");
-            } catch (Exception e) {
+                // Check if the product already exists
+                String checkProductSQL = "SELECT COUNT(*) FROM products WHERE name = ? AND store_id = ?";
+                PreparedStatement checkStmt = connection.prepareStatement(checkProductSQL);
+                checkStmt.setString(1, name);
+                checkStmt.setInt(2, storeId);
+                ResultSet rs = checkStmt.executeQuery();
+
+                int count = 0;
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+
+                // If the product does not exist, insert it
+                if (count == 0) {
+                    String insertProductSQL = "INSERT INTO products (name, price, quantity, store_id) VALUES (?, ?, ?, ?)";
+                    PreparedStatement insertStmt = connection.prepareStatement(insertProductSQL);
+                    
+                    insertStmt.setString(1, name);
+                    insertStmt.setDouble(2, price);
+                    insertStmt.setInt(3, quantity);
+                    insertStmt.setInt(4, storeId);
+                    
+                    insertStmt.executeUpdate();
+                    System.out.println("Product inserted successfully: " + name);
+                    insertStmt.close();
+                } else {
+                    System.out.println("Product already exists, skipping insert: " + name);
+                }
+
+                checkStmt.close();
+            } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
                 try {
                     connection.close();
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
         }
     }
-
 
 }
