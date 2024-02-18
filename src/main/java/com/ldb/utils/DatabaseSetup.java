@@ -56,9 +56,12 @@ public class DatabaseSetup {
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
                         "user_id INT, " +
                         "name VARCHAR(255), " +
+                        "sales_revenue DECIMAL(15, 2) DEFAULT 0.00, " + // Added column for sales revenue
+                        "total_sales INT DEFAULT 0, " + // Added column for total number of sales
                         "FOREIGN KEY (user_id) REFERENCES users(id)" +
                         ")";
                 statement.executeUpdate(sqlCreateStoresTable);
+                System.out.println("Stores table created or already exists.");
                 statement.close();
             } catch (Exception e) {
                 e.printStackTrace();
