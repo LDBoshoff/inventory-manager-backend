@@ -28,6 +28,11 @@ public class StoreHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        if (!JwtUtil.isAuthenticated(exchange)) {
+            Response.sendResponse(exchange, 401, "Unauthorized");
+            return;
+        }
+
         String requestMethod = exchange.getRequestMethod();
 
         if ("OPTIONS".equals(requestMethod)) {  
@@ -43,7 +48,7 @@ public class StoreHandler implements HttpHandler {
                     Response.sendResponse(exchange, 400, "Invalid store ID");
                 }
 
-                if (authenticateAndAuthorize(exchange, storeId)) {
+                if (!isAuthorized(exchange, storeId)) {
                     Response.sendResponse(exchange, 401, "Unauthorized");
                     return;
                 }
@@ -71,10 +76,11 @@ public class StoreHandler implements HttpHandler {
                         Response.sendResponse(exchange, 400, "Invalid store ID");
                     }
 
-                    if (authenticateAndAuthorize(exchange, storeId)) {
+                    if (!isAuthorized(exchange, storeId)) {
                         Response.sendResponse(exchange, 401, "Unauthorized");
                         return;
                     }
+
 
                     Map<String, String> fieldValues = Request.parseAndValidateFields(exchange.getRequestBody(), new String[]{"name"});
                     int userId = JwtUtil.extractUserIdFromToken(JwtUtil.extractJWTfromHeader(exchange));
@@ -107,15 +113,11 @@ public class StoreHandler implements HttpHandler {
         }
     }
 
-    private boolean authenticateAndAuthorize(HttpExchange exchange, int storeId) throws IOException {
-        String jwt = JwtUtil.extractJWTfromHeader(exchange);
-        int userId = JwtUtil.extractUserIdFromToken(jwt);
-
-        if (!JwtUtil.authenticate(jwt) && !storeManager.verifyOwnership(userId, storeId)) {
-            return false;
-        }
+   private boolean isAuthorized(HttpExchange exchange, int storeId) { 
+        String token = JwtUtil.extractJWTfromHeader(exchange);
+        int userId = JwtUtil.extractUserIdFromToken(token);
         
-        return true;
+        return storeManager.verifyOwnership(userId, storeId);
     }
 
 }
