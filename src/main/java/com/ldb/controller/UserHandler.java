@@ -37,13 +37,18 @@ public class UserHandler implements HttpHandler {
         } else if (requestMethod.equals("POST")) {
             String path = exchange.getRequestURI().getPath();
 
-            if (path.equals("/api/users/register")) {
-                handleRegistration(exchange);
-            } else if (path.equals("/api/users/login")) {
-                handleLogin(exchange);
-            } else {
-                Response.sendResponse(exchange, 405, "Path does not exist.");
+            switch (path) {
+                case "/api/users/register":
+                    handleRegistration(exchange);
+                    break;
+                case "/api/users/login":
+                    handleLogin(exchange);
+                    break;
+                default:
+                    Response.sendResponse(exchange, 405, "Path does not exist.");
+                    break;
             }
+            
         } else {
             Response.sendResponse(exchange, 405, "Method not allowed for this endpoint. Please use HTTP POST method.");
         }
