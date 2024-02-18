@@ -5,11 +5,16 @@ import com.sun.net.httpserver.HttpServer;
 import main.java.com.ldb.controller.ProductHandler;
 import main.java.com.ldb.controller.StoreHandler;
 import main.java.com.ldb.controller.UserHandler;
+import main.java.com.ldb.utils.DatabaseSeeder;
+import main.java.com.ldb.utils.DatabaseSetup;
 
 import java.net.InetSocketAddress;
 
 public class App {
     public static void main(String[] args) throws Exception {
+        DatabaseSetup.createTables();
+        DatabaseSeeder.seedData();
+
         int port = 8080;                                                       // Define the port for the server
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0); // Create an HTTP server
         
