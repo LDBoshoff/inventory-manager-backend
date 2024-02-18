@@ -84,5 +84,4 @@ public class JwtUtil {
         String token = extractJWTfromHeader(exchange);
         return verifyToken(token) && !isTokenExpired(token);
     }
-    
 }
