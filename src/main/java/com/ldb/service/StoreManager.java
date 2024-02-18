@@ -52,8 +52,10 @@ public class StoreManager {
                 int id = resultSet.getInt("id");
                 int storeUserId = resultSet.getInt("user_id");
                 String name = resultSet.getString("name");
+                double revenue = resultSet.getDouble("sales_revenue");
+                int sales = resultSet.getInt("total_sales");
                 
-                Store store = new Store(id, storeUserId, name);
+                Store store = new Store(id, storeUserId, name, revenue, sales);
                 return store;
             }
         } catch (SQLException e) {
@@ -75,8 +77,10 @@ public class StoreManager {
                 int id = resultSet.getInt("id");
                 int storeUserId = resultSet.getInt("user_id");
                 String name = resultSet.getString("name");
+                double revenue = resultSet.getDouble("sales_revenue");
+                int sales = resultSet.getInt("total_sales");
     
-                Store store = new Store(id, storeUserId, name);
+                Store store = new Store(id, storeUserId, name, revenue, sales);
                 return store;
             }
         } catch (SQLException e) {
