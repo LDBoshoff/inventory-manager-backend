@@ -68,10 +68,11 @@ public class DatabaseSeeder {
         Connection connection = DatabaseConnection.getConnection();
         if (connection != null) {
             try {
-                // Check if the product already exists
-                String checkProductSQL = "SELECT COUNT(*) FROM stores WHERE user_id = ?";
-                PreparedStatement checkStmt = connection.prepareStatement(checkProductSQL);
-                checkStmt.setInt(1, userId);
+                // Check if the store already exists
+                String checkStoreSQL = "SELECT COUNT(*) FROM stores WHERE name = ? AND user_id = ?";
+                PreparedStatement checkStmt = connection.prepareStatement(checkStoreSQL);
+                checkStmt.setString(1, storeName);
+                checkStmt.setInt(2, userId);
                 ResultSet rs = checkStmt.executeQuery();
 
                 int count = 0;
@@ -80,18 +81,22 @@ public class DatabaseSeeder {
                 }
 
                 if (count == 0) {
-                     // Insert the store linked to John's user ID
-                    String insertStoreSQL = "INSERT INTO stores (user_id, name) VALUES (?, ?)";
+                    // Insert the store linked to John's user ID
+                    String insertStoreSQL = "INSERT INTO stores (user_id, name, sales_revenue, total_sales) VALUES (?, ?, ?, ?)";
                     PreparedStatement insertStoreStmt = connection.prepareStatement(insertStoreSQL);
-                    insertStoreStmt.setInt(1, userId); // Use the assumed user ID for John Doe
+                    insertStoreStmt.setInt(1, userId);
                     insertStoreStmt.setString(2, storeName);
+                    insertStoreStmt.setDouble(3, 0.0); // Set sales revenue to 0
+                    insertStoreStmt.setInt(4, 0); // Set total sales to 0
 
                     insertStoreStmt.executeUpdate();
                     System.out.println("Store seeded successfully for John Doe.");
                     insertStoreStmt.close();
                 } else {
-                    System.out.println("Store seeding failed for John Doe.");
+                    System.out.println("Store already exists, skipping insert for John Doe.");
                 }
+                
+                checkStmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
