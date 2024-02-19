@@ -3,6 +3,8 @@ package main.java.com.ldb.controller;
 import java.io.IOException;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -53,7 +55,7 @@ public class StoreHandler implements HttpHandler {
                     return;
                 }
 
-                Response.sendResponse(exchange, 200, store.toString()); 
+                Response.sendResponse(exchange, 200, new JSONObject(store).toString()); 
             } else {
                 Response.sendResponse(exchange, 400, "Invalid request");
             }
@@ -77,10 +79,10 @@ public class StoreHandler implements HttpHandler {
 
 
                     Map<String, String> fieldValues = Request.parseAndValidateFields(exchange.getRequestBody(), new String[]{"name"});
-                    int userId = JwtUtil.extractUserIdFromToken(JwtUtil.extractJWTfromHeader(exchange));
-                    Store updatedStore = new Store(storeId, userId, fieldValues.get("name"));
+                    Store store = storeManager.getStoreById(storeId);
+                    store.setName(fieldValues.get("name"));
                     // Update the store details
-                    boolean updateSuccess = storeManager.updateStore(updatedStore);
+                    boolean updateSuccess = storeManager.updateStore(store);
                     if (!updateSuccess) {
                         Response.sendResponse(exchange, 500, "Failed to update store");
                         return;
