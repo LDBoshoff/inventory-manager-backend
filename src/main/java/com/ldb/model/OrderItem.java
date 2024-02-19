@@ -2,21 +2,21 @@ package main.java.com.ldb.model;
 
 public class OrderItem {
     private Integer id; // Optional: Use Integer to allow for null if not set, representing a new order item
-    private String productName; // Replacing productId with a Product object
+    private int productId; // Now using productId instead of productName
     private double price;
     private int quantity;
 
-    // Constructor for creating a new OrderItem instance without an ID, using a Product object
-    public OrderItem(String productName, double price, int quantity) {
-        this.productName = productName;
+    // Constructor for creating a new OrderItem instance without an ID, using a Product ID
+    public OrderItem(int productId, double price, int quantity) {
+        this.productId = productId;
         this.price = price;
         this.quantity = quantity;
     }
 
-    // Constructor for creating an OrderItem instance with an ID, using a Product object
-    public OrderItem(Integer id, String productName, double price, int quantity) {
+    // Constructor for creating an OrderItem instance with an ID, using a Product ID
+    public OrderItem(Integer id, int productId, double price, int quantity) {
         this.id = id;
-        this.productName = productName;
+        this.productId = productId;
         this.price = price;
         this.quantity = quantity;
     }
@@ -31,12 +31,12 @@ public class OrderItem {
         this.id = id;
     }
 
-    public String getProductName() {
-        return productName;
+    public int getProductId() {
+        return productId;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setProductId(int productId) {
+        this.productId = productId;
     }
 
     public double getPrice() {
@@ -46,7 +46,6 @@ public class OrderItem {
     public void setPrice(double price) {
         this.price = price;
     }
-
 
     public int getQuantity() {
         return quantity;
@@ -60,7 +59,7 @@ public class OrderItem {
     public String toString() {
         return "OrderItem{" +
                 "id=" + id +
-                ", product=" + getProductName() +
+                ", productId=" + productId +
                 ", price=" + price +
                 ", quantity=" + quantity +
                 '}';
