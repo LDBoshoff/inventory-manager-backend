@@ -31,7 +31,7 @@ public class OrderManager {
             PreparedStatement updateProductStmt = connection.prepareStatement(updateProductSql);
             for (OrderItem item : order.getItems()) {
                 updateProductStmt.setInt(1, item.getQuantity());
-                updateProductStmt.setInt(2, item.getProduct().getId());
+                updateProductStmt.setInt(2, item.getProductId());
                 updateProductStmt.executeUpdate();
             }
 
@@ -42,7 +42,6 @@ public class OrderManager {
             updateStoreStmt.setInt(2, order.getStoreId());
             updateStoreStmt.executeUpdate();
 
-            connection.commit(); // Commit transaction
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
