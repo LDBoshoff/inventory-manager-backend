@@ -2,13 +2,17 @@ package main.java.com.ldb.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import main.java.com.ldb.model.OrderItem;
 import main.java.com.ldb.model.Product;
 
 public class Request {
@@ -23,7 +27,7 @@ public class Request {
     }
 
     // Helper method to parse the JSON request
-    private static JSONObject parseJsonRequest(InputStream inputStream) throws IOException {
+    public static JSONObject parseJsonRequest(InputStream inputStream) throws IOException {
         try {
             return new JSONObject(new JSONTokener(inputStream));
         } catch (JSONException e) {
@@ -83,4 +87,18 @@ public class Request {
         }
         return queryMap;
     }
+
+    public static List<OrderItem> parseItemsStringToList(String itemsString) {
+    List<OrderItem> items = new ArrayList<>();
+    JSONArray itemsArray = new JSONArray(itemsString);
+    for (int i = 0; i < itemsArray.length(); i++) {
+        JSONObject itemJson = itemsArray.getJSONObject(i);
+        int productId = itemJson.getInt("productId");
+        double price = itemJson.getDouble("price");
+        int quantity = itemJson.getInt("quantity");
+        OrderItem item = new OrderItem(productId, price, quantity);
+        items.add(item);
+    }
+    return items;
+}
 }
