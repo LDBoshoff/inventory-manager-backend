@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import main.java.com.ldb.model.Order;
 import main.java.com.ldb.model.OrderItem;
 import main.java.com.ldb.service.OrderManager;
 import main.java.com.ldb.service.ProductManager;
@@ -46,26 +47,36 @@ public class OrderHandler implements HttpHandler {
                 String[] requiredOrderFields = new String[]{"storeId", "customerName", "customerEmail", "customerPhoneNumber", "customerAddress", "items"};
                 Map<String, String> orderData = Request.parseAndValidateFields(exchange.getRequestBody(), requiredOrderFields);// Parse and validate order fields
 
-                for (String field : requiredOrderFields) {
-                    String value = orderData.get(field);
-                    System.out.println(field + ": " + value); // This will print to your terminal
-                }
-
-                String items = orderData.get("items");
-                System.out.println("items String = " + items);
-
                 String itemsJsonString = orderData.get("items");
-                // Assuming you have a method parseItemsStringToList that converts the JSON string to List<OrderItem>
                 List<OrderItem> orderItems = Request.parseItemsStringToList(itemsJsonString);
 
-                // For demonstration, printing items to terminal
-                for (OrderItem item : orderItems) {
-                    System.out.println(item.toString());
+                if (orderItems.isEmpty()) {
+                    Response.sendResponse(exchange, 400, "No Items In Order");
+                    return;
                 }
 
-                
+                int storeId = parseStoreId(orderData.get("storeId"));
 
-                Response.sendResponse(exchange, 200, "Order placed successfully.");
+                Order order = new Order(storeId, orderData.get("customerName"), orderData.get("customerEmail"), orderData.get("customerPhoneNumber"), orderData.get("customerAddress"));
+                for (OrderItem item : orderItems) {
+                    order.addItem(item);
+                }
+
+                // Check stock availability
+                if (!orderManager.hasSufficientStock(order)) {
+                    Response.sendResponse(exchange, 400, "Insufficient stock for one or more items");
+                    return;
+                }
+
+                boolean orderPlaced = orderManager.placeOrder(order);
+
+                // If stock is sufficient, proceed to place the order
+                if (orderPlaced) {
+                    Response.sendResponse(exchange, 200, "Order placed successfully");
+                } else {
+                    Response.sendResponse(exchange, 500, "Failed to place the order");
+                }
+                
             } catch (IllegalArgumentException e) {
                 Response.sendResponse(exchange, 400, "Bad Request: " + e.getMessage());
             } catch (Exception e) {
@@ -74,6 +85,19 @@ public class OrderHandler implements HttpHandler {
             }
         } else {
             Response.sendResponse(exchange, 405, "Method not allowed for this endpoint.");
+        }
+    }
+
+    public static int parseStoreId(String storeString) {
+        try {
+            int storeId = Integer.parseInt(storeString);
+            return storeId;
+        } catch (NumberFormatException e) {
+            System.out.println("Error parsing storeID: " + e.getMessage());
+            return -1;
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
+            return -1;
         }
     }
 
