@@ -2,6 +2,7 @@ package main.java.com.ldb.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import main.java.com.ldb.model.Order;
@@ -47,6 +48,33 @@ public class OrderManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean hasSufficientStock(Order order) {
+        boolean sufficientStock = true;
+        try {
+            String checkStockSql = "SELECT id, quantity FROM products WHERE id = ?";
+            PreparedStatement checkStockStmt = connection.prepareStatement(checkStockSql);
+
+            for (OrderItem item : order.getItems()) {
+                checkStockStmt.setInt(1, item.getProductId());
+                ResultSet rs = checkStockStmt.executeQuery();
+                if (rs.next()) {
+                    int stockQuantity = rs.getInt("quantity");
+                    if (item.getQuantity() > stockQuantity) {
+                        sufficientStock = false;
+                        break; // Exit the loop as soon as an insufficient stock is found
+                    }
+                } else {
+                    sufficientStock = false; // Product not found
+                    break;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            sufficientStock = false; // Assume insufficient stock on error
+        }
+        return sufficientStock;
     }
 
 }
