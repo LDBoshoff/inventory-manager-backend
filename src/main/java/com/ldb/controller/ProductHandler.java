@@ -28,14 +28,24 @@ public class ProductHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        String requestMethod = exchange.getRequestMethod();
+        String path = exchange.getRequestURI().getPath();
+        String query = exchange.getRequestURI().getQuery();
+
+        if ("OPTIONS".equals(requestMethod)) {  
+            // Set CORS headers for preflight and actual requests
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // Allow all origins
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            exchange.sendResponseHeaders(200, -1); // No content
+            exchange.close();
+            return;
+        }
+
         if (!JwtUtil.isAuthenticated(exchange)) {
             Response.sendResponse(exchange, 401, "Unauthorized");
             return;
         }
-
-        String requestMethod = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        String query = exchange.getRequestURI().getQuery();
 
         System.out.println("Request Method =  " + requestMethod + ", Path = " + path + ", Query = " + query );
 
