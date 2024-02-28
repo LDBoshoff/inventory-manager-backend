@@ -24,17 +24,26 @@ public class StoreHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        String requestMethod = exchange.getRequestMethod();
+
+        if ("OPTIONS".equals(requestMethod)) {  
+            // Set CORS headers for preflight and actual requests
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // Allow all origins
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            exchange.sendResponseHeaders(200, -1); // No content
+            exchange.close();
+            return;
+            // Response.handlePreflight(exchange);  // Handle preflight request
+
+        } 
+        
         if (!JwtUtil.isAuthenticated(exchange)) {
             Response.sendResponse(exchange, 401, "Unauthorized");
             return;
         }
-
-        String requestMethod = exchange.getRequestMethod();
-
-        if ("OPTIONS".equals(requestMethod)) {  
-            Response.handlePreflight(exchange);  // Handle preflight request
-
-        } else if ("GET".equals(requestMethod)) {
+        
+        if ("GET".equals(requestMethod)) {
             String path = exchange.getRequestURI().getPath(); // /api/stores/{storeId}
             String[] parts = path.split("/");
             
