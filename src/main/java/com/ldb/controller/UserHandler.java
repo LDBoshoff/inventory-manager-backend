@@ -57,7 +57,9 @@ public class UserHandler implements HttpHandler {
     
             String email = fieldValues.get("email");
             if (!userManager.uniqueEmail(email)) {
-                Response.sendResponse(exchange, 409, "Email is not unique");
+                String responsePayload = "{\"message\": \"Email is not unique\"}";
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                Response.sendResponse(exchange, 409, responsePayload);
                 return;
             }
     
@@ -66,12 +68,18 @@ public class UserHandler implements HttpHandler {
                 User retrievedUser = userManager.getUserByEmail(newUser.getEmail());
                 Store newStore = new Store(retrievedUser.getId(), "Default store name");
                 storeManager.createStore(newStore);
-                Response.sendResponse(exchange, 200, "User registered successfully");
+                String responsePayload = "{\"message\": \"User registered successfully\"}";
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                Response.sendResponse(exchange, 200, responsePayload);
             } else {
-                Response.sendResponse(exchange, 500, "Failed to register user.");
+                String responsePayload = "{\"message\": \"Failed to register user.\"}";
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                Response.sendResponse(exchange, 500, responsePayload);
             }
         } catch (IllegalArgumentException e) {
-            Response.sendResponse(exchange, 400, e.getMessage());
+            String responsePayload = "{\"message\": \"" + e.getMessage() + "\"}";
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            Response.sendResponse(exchange, 400, responsePayload);
         }
     }
 
@@ -98,7 +106,9 @@ public class UserHandler implements HttpHandler {
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 Response.sendResponse(exchange, 200, responsePayload);
             } else {
-                Response.sendResponse(exchange, 401, "Incorrect Details");
+                String failedLogin = String.format("{\"message\":\"Incorrect Details\"}");
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                Response.sendResponse(exchange, 401, failedLogin);
             }
         } catch (IllegalArgumentException e) {
             Response.sendResponse(exchange, 400, e.getMessage());
